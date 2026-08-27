@@ -32,6 +32,7 @@ parse_dates = [
     "tpep_dropoff_datetime"
 ]
 
+
 def run():
     """Ingest NYC taxi data into PostgreSQL database."""
 
@@ -40,8 +41,6 @@ def run():
     prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow'
     url = f'{prefix}/yellow_tripdata_{year}-{month:02d}.csv.gz'
 
-    # Read all of the available data with parsed types
-    df = pd.read_csv(url, dtype=dtype, parse_dates=parse_dates)
 
     # Create Database connection
     pg_user, pg_pass, pg_host, pg_port, pg_db = 'root', 'root', 'localhost', 5432, 'ny_taxi'
@@ -57,15 +56,20 @@ def run():
         iterator=True,
         chunksize=chunksize
     )
-
-    # Create the table
-    target_table = 'yellow_taxi_data'
-    df.head(n=0).to_sql(name=target_table, con=engine, if_exists='replace')
    
-    # Ingest data in chunks, with a progress bar from tqdm
+    # Ingest data into target table in chunks with a progress bar 
+    target_table = 'yellow_taxi_data'
+    first = True
+
     for df_chunk in tqdm(df_iter):
+        if (first):
+            # Create the table
+            df_chunk.head(0).to_sql(name=target_table, con=engine, if_exists='replace')
+            first = False
+
+        # Insert the data chunk into the target table
         df_chunk.to_sql(name=target_table, con=engine, if_exists='append')
-        print("Inserted chunk: ", len(df_chunk))
+
 
 
 
