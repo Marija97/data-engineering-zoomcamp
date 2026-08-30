@@ -29,3 +29,22 @@ docker run -it --rm \
   --name pgadmin \
   dpage/pgadmin4
 
+
+# Dockerizing the Ingestion Script
+
+# build the docker image for ingestion
+docker build -t taxi_ingest:v001 .
+
+# run the containerized ingestion
+docker run -it --rm \
+    --network=pg-network \
+    taxi_ingest:v001 \
+    --pg-user=root \
+    --pg-pass=root \
+    --pg-host=pgdatabase \
+    --pg-port=5432 \
+    --pg-db=ny_taxi \
+    --target-table=yellow_taxi_trips_2021_02 \
+    --year=2021 \
+    --month=2 \
+    --chunksize=100000
