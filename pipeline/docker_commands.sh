@@ -48,3 +48,12 @@ docker run -it --rm \
     --year=2021 \
     --month=2 \
     --chunksize=100000
+
+
+# Replace these multiple docker run with Docker Compose
+# create docker-compose.yaml
+# run in detached mode
+docker-compose up -d
+
+# later stop the services with
+docker-compose down
