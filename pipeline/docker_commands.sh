@@ -57,3 +57,18 @@ docker-compose up -d
 
 # later stop the services with
 docker-compose down
+
+# docker compose created a network under different name
+# find it under this list
+docker network ls
+
+# network name is pipeline_default, so the ingestion container will be run with:
+docker run -it --rm \
+  --network=pipeline_default \
+  taxi_ingest:v001 \
+    --pg-user=root \
+    --pg-pass=root \
+    --pg-host=pgdatabase \
+    --pg-port=5432 \
+    --pg-db=ny_taxi \
+    --target-table=yellow_taxi_trips
