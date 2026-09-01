@@ -72,3 +72,73 @@ docker run -it --rm \
     --pg-port=5432 \
     --pg-db=ny_taxi \
     --target-table=yellow_taxi_trips
+
+
+# Cleanup Docker resources to free up disk space
+
+# stop all running containers
+docker-compose down
+
+
+# Remove specific containers
+# list all containers
+docker ps -a
+
+# remove specific container
+docker rm <container_id>
+
+# remove all listed containers
+docker rm $(docker ps -aq)
+
+# remove all stopped containers
+docker container prune
+
+
+# Remove Docker Images
+# list all images
+docker images
+
+# remove specific image
+docker rmi taxi_ingest:v001
+
+# remove all unused images
+docker image prune -a
+
+
+# Remove Docker volumes
+# List volumes
+docker volume ls
+
+# Remove specific volumes
+docker volume rm ny_taxi_postgres_data
+docker volume rm pgadmin_data
+
+# Remove all unused volumes
+docker volume prune
+
+
+# Remove Docker Networks
+# list networks
+docker network ls
+
+# remove specific network
+docker network rm pg-network
+
+# remove all unused networks
+docker network prune
+
+
+# Complete Cleanup
+# ⚠️ Warning: This removes ALL Docker resources!
+docker system prune -a --volumes
+
+
+# Clean up local files
+# remove parquet files
+rm *.parquet
+
+# remove Python cache
+rm -rf __pycache__ .pytest_cache
+
+# remove virtual environment (if using venv)
+rm -rf .venv
