@@ -13,7 +13,7 @@ provider "google" {
 }
 
 resource "google_storage_bucket" "demo-bucket" {
-  name          = "dtc-de-course-507510-terrabucket"
+  name          = var.gcs_bucket_name
   location      = var.location
   force_destroy = true
 
@@ -28,8 +28,9 @@ resource "google_storage_bucket" "demo-bucket" {
 }
 
 resource "google_bigquery_dataset" "demo-dataset" {
-  dataset_id    = "demo_dataset"
+  dataset_id    = var.bq_dataset_name
+  location      = var.location
   friendly_name = "Demo Dataset"
   description   = "This is a dataset for practicing Terraform"
-  location      = var.location
+
 }
