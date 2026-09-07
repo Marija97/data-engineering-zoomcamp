@@ -15,7 +15,7 @@ variable "region" {
 
 variable "gcs_bucket_name" {
   description = "My Storage Bucket Name"
-  default     = "${var.project}-terrabucket"
+  default     = "terrabucket-01"
 }
 
 variable "bq_dataset_name" {
