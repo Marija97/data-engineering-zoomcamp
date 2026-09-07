@@ -8,13 +8,13 @@ terraform {
 }
 
 provider "google" {
-  project = "dtc-de-course-507510"
-  region  = "europe-west2"
+  project = var.project
+  region  = var.region
 }
 
 resource "google_storage_bucket" "demo-bucket" {
   name          = "dtc-de-course-507510-terrabucket"
-  location      = "EU"
+  location      = var.location
   force_destroy = true
 
   lifecycle_rule {
@@ -31,5 +31,5 @@ resource "google_bigquery_dataset" "demo-dataset" {
   dataset_id    = "demo_dataset"
   friendly_name = "Demo Dataset"
   description   = "This is a dataset for practicing Terraform"
-  location      = "EU"
+  location      = var.location
 }
