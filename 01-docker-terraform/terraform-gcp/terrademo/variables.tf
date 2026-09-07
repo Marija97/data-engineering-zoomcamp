@@ -1,3 +1,9 @@
+variable "credentials" {
+  description = "My Google Cloud Credentials"
+  default     = "./credentials/google-account-keys.json"
+  # default     = ".\\credentials\\google-account-keys.json"
+}
+
 variable "project" {
   description = "Project"
   default     = "dtc-de-course-507510"
