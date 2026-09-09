@@ -1,23 +1,38 @@
+# Flow - a container for tasks and their orchestration logic
+# Tasks - the steps within a flow
+# Inputs - dynamic values passed to the flow at runtime
+# Outputs - pass data between tasks and flows
+# Triggers - mechanism that automatically starts the execution of a flow
+# Execution - a single run of a flow with a specific state
+# Variables - key–value pairs that let you reuse values across tasks
+# Plugin Defaults - default values applied to every task of a given type within one or more flows
+# Concurrency - control how many executions of a flow can run at the same time
+
 id: 01_hello_world
 namespace: zoomcamp.masha
 
+# The flow takes an input called name
 inputs:
   - id: name
     type: STRING
     defaults: Will
 
+# We have a concurrency limit of 2 executions. Any further ones made while 2 are running will fail
 concurrency:
   behavior: FAIL
   limit: 2
 
+# There is a variable that takes the name input to generate a full welcome message
 variables:
   welcome_message: "Hello, {{ inputs.name }}!"
   
+# The flow has 5 tasks: 3 log tasks and a sleep task
 tasks:
   - id: hello_message
     type: io.kestra.plugin.core.log.Log
     message: "{{ render(vars.welcome_message) }}"
   
+  # An output is generated from the return task and is logged in a later log task
   - id: generate_output
     type: io.kestra.plugin.core.debug.Return
     format: I was generated during this workflow.
@@ -34,11 +49,13 @@ tasks:
     type: io.kestra.plugin.core.log.Log
     message: "Goodbye, {{ inputs.name }}!"
 
+# Plugin Defaults are used to make both log tasks send their messages as ERROR level
 pluginDefaults:
   - type: io.kestra.plugin.core.log.Log
     values:
       level: ERROR
 
+# There is a trigger to execute this flow every day at 10am
 triggers:
   - id: schedule
     type: io.kestra.plugin.core.trigger.Schedule
