@@ -1,55 +1,126 @@
 id: 03_getting_started_data_pipeline
 namespace: zoomcamp.masha
 
+# Define inputs that can be provided when executing the flow
 inputs:
+  # User-provided input to control which product columns 
+  # should survive the transformation step.
+  #
+  # Example: columns_to_keep = ["brand", "price"]
   - id: columns_to_keep
     type: ARRAY
+    # Each item in the array must be a string
     itemType: STRING
+    # Default values used if no input is provided at execution time
     defaults:
       - brand
       - price
 
 tasks:
+  # ----------------------------------------------------------
+  # EXTRACT
+  # ----------------------------------------------------------
   - id: extract
+    # Downloads data from an HTTP endpoint
     type: io.kestra.plugin.core.http.Download
+
+    # URL of the JSON data source
     uri: https://dummyjson.com/products
 
+  # ----------------------------------------------------------
+  # TRANSFORM
+  # ----------------------------------------------------------
   - id: transform
+    # Runs Python code directly inside the Kestra workflow
     type: io.kestra.plugin.scripts.python.Script
+
+    # Docker image used as the Python execution environment.
+    # The task runs in an isolated container based on this image.
     containerImage: python:3.11-alpine
+
+    # Makes files available to the Python task.
+    # The downloaded file from the extract task is renamed to data.json.
     inputFiles:
       data.json: "{{outputs.extract.uri}}"
+
+    # Defines which files should be collected as outputs after
+    # the Python task finishes. "*.json" collects all JSON files.
     outputFiles:
       - "*.json"
+
+    # Environment variables passed into the Python container.
+    # The flow input is made available to the script through
+    # the COLUMNS_TO_KEEP environment variable.
     env:
       COLUMNS_TO_KEEP: "{{inputs.columns_to_keep}}"
+
+    # Python code executed inside the container
     script: |
       import json
       import os
 
+      # Read the COLUMNS_TO_KEEP environment variable.
+      # Kestra passes the input array as a JSON-formatted string.
       columns_to_keep_str = os.getenv("COLUMNS_TO_KEEP")
+
+      # Convert the JSON string back into a Python list.
       columns_to_keep = json.loads(columns_to_keep_str)
 
+      # Load the downloaded product data.
       with open("data.json", "r") as file:
           data = json.load(file)
 
+      # Create a new list containing only the requested columns
+      # for each product.
+      #
+      # If a product does not contain a requested column,
+      # "N/A" is used as the default value.
       filtered_data = [
           {column: product.get(column, "N/A") for column in columns_to_keep}
           for product in data["products"]
       ]
 
+      # Save the transformed data as products.json.
+      # This file will be collected by Kestra because it matches
+      # the "*.json" outputFiles pattern.
       with open("products.json", "w") as file:
           json.dump(filtered_data, file, indent=4)
 
+  # ----------------------------------------------------------
+  # QUERY
+  # ----------------------------------------------------------
   - id: query
+    # Executes SQL queries using an embedded DuckDB database
     type: io.kestra.plugin.jdbc.duckdb.Queries
+
+    # Makes the products.json file produced by the transform task
+    # available to the DuckDB task.
     inputFiles:
       products.json: "{{outputs.transform.outputFiles['products.json']}}"
+
+    # SQL executed by DuckDB
     sql: |
+      # Install and load DuckDB's JSON extension so that
+      # JSON files can be queried directly.
       INSTALL json;
       LOAD json;
-      SELECT brand, round(avg(price), 2) as avg_price
+
+      # Read the transformed JSON file and calculate the average
+      # price for each brand.
+      SELECT
+        brand,
+        round(avg(price), 2) as avg_price
+
+      # {{workingDir}} is the working directory created by Kestra
+      # for this task, where inputFiles are made available.
       FROM read_json_auto('{{workingDir}}/products.json')
+
+      # Group products by brand before calculating the average.
       GROUP BY brand
+
+      # Show brands with the highest average price first.
       ORDER BY avg_price DESC;
+
+    # Store the query results as Kestra task outputs so they can
+    # be accessed later by other tasks in the workflow.
     fetchType: STORE
