@@ -3,13 +3,23 @@ namespace: zoomcamp.masha
 description: |
   The CSV Data used in the course: https://github.com/DataTalksClub/nyc-tlc-data/releases
 
+# ============================================================
+# INPUTS
+# ============================================================
+# These values are selected when starting the flow.
+# They determine which taxi data file will be downloaded.
 inputs:
+
+  # Select between Yellow Taxi and Green Taxi data
+  # green is smaller dataset, so it is set as default
   - id: taxi
     type: SELECT
     displayName: Select taxi type
     values: [yellow, green]
-    defaults: yellow
+    defaults: green
 
+  # with these default values, we are downloading
+  # green_tripdata_2019-01.csv
   - id: year
     type: SELECT
     displayName: Select year
