@@ -63,20 +63,59 @@ variables:
   # by the extract task.
   data: "{{outputs.extract.outputFiles[inputs.taxi ~ '_tripdata_' ~ inputs.year ~ '-' ~ inputs.month ~ '.csv']}}"
 
+
+# ============================================================
+# TASKS
+# ============================================================
 tasks:
+  # ----------------------------------------------------------
+  # 1. SET LABELS
+  # ----------------------------------------------------------
+  # Adds metadata/labels to the Kestra execution.
+  # This makes executions easier to identify in the Kestra UI.
   - id: set_label
     type: io.kestra.plugin.core.execution.Labels
     labels:
       file: "{{render(vars.file)}}"
       taxi: "{{inputs.taxi}}"
 
+  # ----------------------------------------------------------
+  # 2. EXTRACT
+  # ----------------------------------------------------------
+  # Download the selected NYC taxi CSV file.
+  #
+  # The source file is compressed as .gz.
+  # wget downloads it and gunzip decompresses it.
+  #
+  # Example:
+  # yellow_tripdata_2019-01.csv.gz
+  #             ↓
+  #          gunzip
+  #             ↓
+  # yellow_tripdata_2019-01.csv
   - id: extract
     type: io.kestra.plugin.scripts.shell.Commands
+
+    # Tell Kestra that CSV files created by this task
+    # should be treated as task outputs.
     outputFiles:
       - "*.csv"
+
+    # Execute the shell command directly as a process.
     taskRunner:
       type: io.kestra.plugin.core.runner.Process
+
     commands:
+    
+      # {{inputs.taxi}} determines the taxi type.
+      # {{render(vars.file)}} produces the filename.
+      #
+      # Example:
+      # wget .../yellow/yellow_tripdata_2019-01.csv.gz
+      #       |
+      #     gunzip
+      #       |
+      # yellow_tripdata_2019-01.csv
       - wget -qO- https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{inputs.taxi}}/{{render(vars.file)}}.gz | gunzip > {{render(vars.file)}}
 
   - id: if_yellow_taxi
