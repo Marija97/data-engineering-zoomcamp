@@ -1,0 +1,18 @@
+# Assignment:  Build a Kestra workflow from scratch that downloads 
+#              NYC Taxi Trip Data and loads it into PostgreSQL
+id: 04_postgres_taxi_from_scratch
+namespace: zoomcamp.masha
+description: 
+  Extract Yellow and Green Taxi trip data partitioned by year and 
+  month, load each monthly dataset into a PostgreSQL staging table, 
+  and merge the data into the corresponding final destination table.
+
+
+# CSV data source: https://github.com/DataTalksClub/nyc-tlc-data/releases
+# The workflow should support both Yellow Taxi and Green Taxi data and allow 
+# the user to select the taxi type, year, and month when starting the flow.
+
+tasks:
+  - id: hello
+    type: io.kestra.plugin.core.log.Log
+    message: Hello World!
