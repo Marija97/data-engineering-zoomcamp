@@ -12,6 +12,51 @@ description:
 # The workflow should support both Yellow Taxi and Green Taxi data and allow 
 # the user to select the taxi type, year, and month when starting the flow.
 
+# Build the input filename dynamically
+# For example: yellow_tripdata_2019-01.csv or green_tripdata_2020-05.csv
+# So we need inputs - dynamic values that are selected when starting the flow
+
+# =============================================================================
+# INPUTS
+# =============================================================================
+inputs:
+
+  # Select between Yellow Taxi and Green Taxi data
+  - id: taxi
+    type: SELECT
+    displayName: Select taxi type
+    values: [yellow, green]
+    defaults: yellow
+
+  # Select the year of the taxi data
+  - id: year
+    type: SELECT
+    displayName: Select year
+    values: ["2019", "2020"]
+    defaults: "2019"
+
+  # Select the month of the taxi data
+  - id: month
+    type: SELECT
+    displayName: Select month
+    values: ["01", "02", "03", "04", "05", "06",
+             "07", "08", "09", "10", "11", "12"]
+    defaults: "01"
+
+
+# =============================================================================
+# VARIABLES
+# =============================================================================
+# Variables are key-value pairs that let you reuse values across tasks in 
+# a flow, or across multiple flows when stored at the namespace level.
+# They are referenced with {{vars.variable_name}}
+variables:
+  
+  # Name of the file to be downloaded as data source
+  # Example: yellow + 2019 + 01 --> yellow_tripdata_2019-01.csv
+  filename: "{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv"
+
+
 tasks:
   - id: hello
     type: io.kestra.plugin.core.log.Log
