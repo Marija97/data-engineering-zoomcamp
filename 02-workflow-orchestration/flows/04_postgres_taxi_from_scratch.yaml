@@ -54,11 +54,11 @@ variables:
   
   # Name of the file to be downloaded as data source
   # Example: yellow + 2019 + 01 --> yellow_tripdata_2019-01.csv
-  file: "{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv"
+  filename: "{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv"
 
   # Construct the URL source dynamically for the selected data file
   # Example:     "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-01.csv.gz"
-  data_src_link: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{inputs.taxi}}/{{vars.file}}.gz"
+  data_src_link: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{inputs.taxi}}/{{vars.filename}}.gz"
   
 
 # =============================================================================
@@ -67,7 +67,34 @@ variables:
 tasks:
    
     # Show the URL source for the selected data file to download
-    - id: preparing_data_source
+    - id: prepare_data_source
       type: io.kestra.plugin.core.log.Log
       message: "Preparing data source link: {{render(vars.data_src_link)}}"
-      
+
+
+    # Download the dataset
+    # Create a task that downloads the selected .csv.gz file 
+    # from the repository and decompresses it into a CSV file
+    - id: extract
+
+      # The task for running shell commands such as wget ... | gunzip ...
+      type: io.kestra.plugin.scripts.shell.Commands
+
+      # Tell Kestra that any CSV created by this task should be captured as
+      # task outputs to make them available for other tasks via outputs._
+      outputFiles:
+        - "*.csv"
+
+      # Execute the shell command directly as a process.
+      # taskRunner specifies where/how Kestra should execute the task.
+      # Process: The command runs as a process in the execution environment
+      # rather than, for example, being sent to a Docker container.
+      taskRunner:
+        type: io.kestra.plugin.core.runner.Process
+
+      commands:
+        # The shell commands to be executed
+        # wget downloads the file compressed as .gz. and gunzip decompresses it
+        # and the result gets written in the file with the name defined in variables
+        - wget -qO- {{render(vars.data_src_link)}} | gunzip > {{render(vars.filename)}}
+          
