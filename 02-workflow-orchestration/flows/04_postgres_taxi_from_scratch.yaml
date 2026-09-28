@@ -54,10 +54,20 @@ variables:
   
   # Name of the file to be downloaded as data source
   # Example: yellow + 2019 + 01 --> yellow_tripdata_2019-01.csv
-  filename: "{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv"
+  file: "{{inputs.taxi}}_tripdata_{{inputs.year}}-{{inputs.month}}.csv"
 
+  # Construct the URL source dynamically for the selected data file
+  # Example:     "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-01.csv.gz"
+  data_src_link: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{inputs.taxi}}/{{vars.file}}.gz"
+  
 
+# =============================================================================
+# TASKS
+# =============================================================================
 tasks:
-  - id: hello
-    type: io.kestra.plugin.core.log.Log
-    message: Hello World!
+   
+    # Show the URL source for the selected data file to download
+    - id: preparing_data_source
+      type: io.kestra.plugin.core.log.Log
+      message: "Preparing data source link: {{render(vars.data_src_link)}}"
+      
