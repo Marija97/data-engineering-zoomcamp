@@ -60,6 +60,9 @@ variables:
   # Example:     "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-01.csv.gz"
   data_src_link: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{inputs.taxi}}/{{vars.filename}}.gz"
   
+  # Final destination table
+  # Example: public.yellow_tripdata
+  table: "public.{{inputs.taxi}}_tripdata"
 
 # =============================================================================
 # TASKS
@@ -98,3 +101,41 @@ tasks:
         # and the result gets written in the file with the name defined in variables
         - wget -qO- {{render(vars.data_src_link)}} | gunzip > {{render(vars.filename)}}
           
+
+    # ------------------------------------------------------
+    # CREATE THE FINAL TABLE
+    # ------------------------------------------------------
+    # Connect to the database and
+    # create the final PostgreSQL table if it doesn't exist.
+    #
+    # This is where the processed taxi data will ultimately be stored.
+    - id: create_table
+      type: io.kestra.plugin.jdbc.postgresql.Query
+      url: jdbc:postgresql://pgdatabase:5432/ny_taxi
+      username: root
+      password: root
+      sql: /
+        CREATE TABLE IF NOT EXISTS {{render(vars.table)}} (
+        # Documentation: Data Dictionary – Yellow Taxi Trip Records: 
+        # https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
+            unique_row_id          text,
+            filename               text,
+            VendorID               text,
+            tpep_pickup_datetime   timestamp,
+            tpep_dropoff_datetime  timestamp,
+            passenger_count        integer,
+            trip_distance          double precision,
+            RatecodeID             text,
+            store_and_fwd_flag     text,
+            PULocationID           text,
+            DOLocationID           text,
+            payment_type           integer,
+            fare_amount            double precision,
+            extra                  double precision,
+            mta_tax                double precision,
+            tip_amount             double precision,
+            tolls_amount           double precision,
+            improvement_surcharge  double precision,
+            total_amount           double precision,
+            congestion_surcharge   double precision
+        );
