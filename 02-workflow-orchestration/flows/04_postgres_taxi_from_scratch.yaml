@@ -17,7 +17,7 @@ description:
 # So we need inputs - dynamic values that are selected when starting the flow
 
 # =============================================================================
-# INPUTS
+# Input parameters
 # =============================================================================
 inputs:
 
@@ -45,7 +45,7 @@ inputs:
 
 
 # =============================================================================
-# VARIABLES
+# Common values as variables
 # =============================================================================
 # Variables are key-value pairs that let you reuse values across tasks in 
 # a flow, or across multiple flows when stored at the namespace level.
@@ -65,17 +65,22 @@ variables:
   table: "public.{{inputs.taxi}}_tripdata"
 
 # =============================================================================
-# TASKS
+# Tasks
 # =============================================================================
 tasks:
    
+    # -------------------------------------------------------------------------
+    # Prepare data URL
+    # -------------------------------------------------------------------------
     # Show the URL source for the selected data file to download
     - id: prepare_data_source
       type: io.kestra.plugin.core.log.Log
       message: "Preparing data source link: {{render(vars.data_src_link)}}"
 
 
-    # Download the dataset
+    # -------------------------------------------------------------------------
+    # Extract / Download data
+    # -------------------------------------------------------------------------
     # Create a task that downloads the selected .csv.gz file 
     # from the repository and decompresses it into a CSV file
     - id: extract
@@ -102,9 +107,9 @@ tasks:
         - wget -qO- {{render(vars.data_src_link)}} | gunzip > {{render(vars.filename)}}
           
 
-    # ------------------------------------------------------
-    # CREATE THE FINAL TABLE
-    # ------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Create the final table
+    # -------------------------------------------------------------------------
     # Connect to the database and
     # create the final PostgreSQL table if it doesn't exist.
     #
@@ -114,10 +119,11 @@ tasks:
       url: jdbc:postgresql://pgdatabase:5432/ny_taxi
       username: root
       password: root
-      sql: /
+
+      # Data documentation for Yellow Taxi Trip Records: 
+      # https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
+      sql: |
         CREATE TABLE IF NOT EXISTS {{render(vars.table)}} (
-        # Documentation: Data Dictionary – Yellow Taxi Trip Records: 
-        # https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
             unique_row_id          text,
             filename               text,
             VendorID               text,
