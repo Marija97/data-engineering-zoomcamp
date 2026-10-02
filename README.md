@@ -41,14 +41,12 @@ E[pgAdmin UI] --> C
 │       ├── notebook.ipynb
 │       ├── ingest_data.py
 │       ├── uv.lock
-│       ├── pyproject.toml
-│       └── README.md
+│       └── pyproject.toml
 ├── terraform-gcp/
 │   └── terrademo/
 │       ├── main.tf
 │       ├── variables.tf
-│       ├── .terraform.lock.hcl
-└       └── README.md
+└       └── .terraform.lock.hcl
 ```
 
 ## Technologies Used
