@@ -69,6 +69,19 @@ variables:
   # Select the file whose name is defined by the filename variable
   data: "{{outputs.extract.outputFiles[render(vars.filename)]}}"
 
+# define the pluginDefaults to avoid repeating the connection details in every PostgreSQL task -------
+# =============================================================================
+# PostgreSQL connection setup
+# =============================================================================
+# Define the pluginDefaults to avoid repeating the 
+# connection details in every PostgreSQL task
+pluginDefaults:
+  - type: io.kestra.plugin.jdbc.postgresql
+    values:
+      url: jdbc:postgresql://pgdatabase:5432/ny_taxi
+      username: root
+      password: root
+
 
 # =============================================================================
 # Tasks
@@ -122,9 +135,6 @@ tasks:
     # This is where the processed taxi data will ultimately be stored.
     - id: create_table
       type: io.kestra.plugin.jdbc.postgresql.Query
-      url: jdbc:postgresql://pgdatabase:5432/ny_taxi
-      username: root
-      password: root
 
       # Data documentation for Yellow Taxi Trip Records: 
       # https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
@@ -158,9 +168,6 @@ tasks:
     # -------------------------------------------------------------------------
     - id: insert_data
       type: io.kestra.plugin.jdbc.postgresql.CopyIn
-      url: jdbc:postgresql://pgdatabase:5432/ny_taxi
-      username: root
-      password: root
       format: CSV
       from: "{{render(vars.data)}}"
       table: "{{render(vars.table)}}"
