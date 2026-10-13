@@ -35,6 +35,3 @@ What is to be added:
 
 - Add idempotent logic to the database load stage
 - Support the green taxi dataset, as well as the yellow
-  
-⬅ [Project repository](https://github.com/AsherJD-io/nyc-taxi-data-platform)
-⬅ [Week 1 – Docker & Terraform](https://github.com/AsherJD-io/nyc-taxi-data-platform/tree/main/01-docker-terraform)
