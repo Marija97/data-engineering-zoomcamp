@@ -59,7 +59,11 @@ variables:
   # Construct the URL source dynamically for the selected data file
   # Example:     "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-01.csv.gz"
   data_src_link: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{inputs.taxi}}/{{vars.filename}}.gz"
-  
+
+  # Temporary table used while loading the CSV
+  # Example: public.yellow_tripdata_staging
+  staging_table: "public.{{inputs.taxi}}_tripdata_staging"
+
   # Final destination table
   # Example: public.yellow_tripdata
   table: "public.{{inputs.taxi}}_tripdata"
@@ -69,7 +73,6 @@ variables:
   # Select the file whose name is defined by the filename variable
   data: "{{outputs.extract.outputFiles[render(vars.filename)]}}"
 
-# define the pluginDefaults to avoid repeating the connection details in every PostgreSQL task -------
 # =============================================================================
 # PostgreSQL connection setup
 # =============================================================================
@@ -161,8 +164,41 @@ tasks:
             total_amount           double precision,
             congestion_surcharge   double precision
         );
+      
+    # -------------------------------------------------------------------------
+    # Create the staging table
+    # ------------------------------------------------------
+    # The staging table is a temporary/intermediate location.
+    #
+    # In order to ensure idempotency, 
+    # the data is first loaded here before being merged into the final table.
+    - id: create_staging_table
+      type: io.kestra.plugin.jdbc.postgresql.Queries
 
-  
+      sql: |
+        CREATE TABLE IF NOT EXISTS {{render(vars.staging_table)}} (
+            unique_row_id          text,
+            filename               text,
+            VendorID               text,
+            tpep_pickup_datetime   timestamp,
+            tpep_dropoff_datetime  timestamp,
+            passenger_count        integer,
+            trip_distance          double precision,
+            RatecodeID             text,
+            store_and_fwd_flag     text,
+            PULocationID           text,
+            DOLocationID           text,
+            payment_type           integer,
+            fare_amount            double precision,
+            extra                  double precision,
+            mta_tax                double precision,
+            tip_amount             double precision,
+            tolls_amount           double precision,
+            improvement_surcharge  double precision,
+            total_amount           double precision,
+            congestion_surcharge   double precision
+        );
+
     # -------------------------------------------------------------------------
     # Load the extracted data into the table
     # -------------------------------------------------------------------------
