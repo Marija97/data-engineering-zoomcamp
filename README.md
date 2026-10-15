@@ -8,6 +8,14 @@ Using NYC Taxi trip data as a unifying dataset, the project is to incrementally 
 
 ---
 
+## ARCHITECTURE DIAGRAM
+
+Complete Data Engineering Zoomcamp curriculum: from infrastructure setup to stream processing.
+
+![Zoomcamp Curriculum](./images/arch_v5_workshops.png)
+
+---
+
 ## Technologies Used
 
 ### Core
