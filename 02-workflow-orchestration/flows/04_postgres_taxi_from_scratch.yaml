@@ -167,7 +167,7 @@ tasks:
       
     # -------------------------------------------------------------------------
     # Create the staging table
-    # ------------------------------------------------------
+    # -------------------------------------------------------------------------
     # The staging table is a temporary/intermediate location.
     #
     # In order to ensure idempotency, 
@@ -198,6 +198,18 @@ tasks:
             total_amount           double precision,
             congestion_surcharge   double precision
         );
+
+    # -------------------------------------------------------------------------
+    # Empty the staging table
+    # -------------------------------------------------------------------------
+    # Potentially the staging table had existed before the prevous step and
+    # consists of some data from a previous execution.
+    # Remove that data before loading the new CSV.
+    - id: clear_staging_table
+      type: io.kestra.plugin.jdbc.postgresql.Queries
+
+      sql: |
+        TRUNCATE TABLE {{render(vars.staging_table)}};
 
     # -------------------------------------------------------------------------
     # Load the extracted data into the table
