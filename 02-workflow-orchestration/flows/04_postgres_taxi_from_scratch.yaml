@@ -226,3 +226,13 @@ tasks:
        mta_tax,tip_amount, tolls_amount, improvement_surcharge, total_amount, 
        congestion_surcharge]
       header: true # CSV contains a header row
+
+
+    # -------------------------------------------------------------------------
+    # Clean up execution files
+    # -------------------------------------------------------------------------
+    # Delete files created during this execution.
+    #
+    # If you'd like to explore Kestra outputs, disable this step.
+    - id: purge_files
+      type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
