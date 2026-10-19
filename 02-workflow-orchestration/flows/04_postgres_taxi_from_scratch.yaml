@@ -212,13 +212,13 @@ tasks:
         TRUNCATE TABLE {{render(vars.staging_table)}};
 
     # -------------------------------------------------------------------------
-    # Load the extracted data into the table
+    # Load the extracted data into the staging table
     # -------------------------------------------------------------------------
-    - id: insert_data
+    - id: insert_data_into_staging_table
       type: io.kestra.plugin.jdbc.postgresql.CopyIn
       format: CSV
       from: "{{render(vars.data)}}"
-      table: "{{render(vars.table)}}"
+      table: "{{render(vars.staging_table)}}"
       # Explicitly define the order of columns in the CSV
       columns: [VendorID, tpep_pickup_datetime, tpep_dropoff_datetime,
        passenger_count, trip_distance,RatecodeID, store_and_fwd_flag, 
