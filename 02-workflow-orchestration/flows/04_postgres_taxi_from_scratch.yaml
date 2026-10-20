@@ -227,6 +227,33 @@ tasks:
        congestion_surcharge]
       header: true # CSV contains a header row
 
+    # -------------------------------------------------------------------------
+    # Update staging table with unique row id for each record
+    # -------------------------------------------------------------------------
+    #
+    # A set of identifying columns are are concatenated together and passed
+    # through MD5 function that generates a hash that will identify the row.
+    #
+    - id: add_unique_row_id
+      type: io.kestra.plugin.jdbc.postgresql.Queries
+
+      sql: |
+        UPDATE {{render(vars.staging_table)}}
+        SET
+
+          # Create a hash from several identifying fields
+          unique_row_id = md5(
+            COALESCE(CAST(VendorID AS text), '') ||
+            COALESCE(CAST(tpep_pickup_datetime AS text), '') ||
+            COALESCE(CAST(tpep_dropoff_datetime AS text), '') ||
+            COALESCE(PULocationID, '') ||
+            COALESCE(DOLocationID, '') ||
+            COALESCE(CAST(fare_amount AS text), '') ||
+            COALESCE(CAST(trip_distance AS text), '')
+          ),
+
+          # Store the name of the source CSV file
+          filename = '{{render(vars.filename)}}';
 
     # -------------------------------------------------------------------------
     # Clean up execution files
