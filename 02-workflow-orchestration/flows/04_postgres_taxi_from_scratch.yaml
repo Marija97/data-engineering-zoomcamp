@@ -241,7 +241,6 @@ tasks:
         UPDATE {{render(vars.staging_table)}}
         SET
 
-          # Create a hash from several identifying fields
           unique_row_id = md5(
             COALESCE(CAST(VendorID AS text), '') ||
             COALESCE(CAST(tpep_pickup_datetime AS text), '') ||
@@ -252,7 +251,6 @@ tasks:
             COALESCE(CAST(trip_distance AS text), '')
           ),
 
-          # Store the name of the source CSV file
           filename = '{{render(vars.filename)}}';
     
 
@@ -271,10 +269,8 @@ tasks:
         MERGE INTO {{render(vars.table)}} AS T
         USING {{render(vars.staging_table)}} AS S
 
-        # Match existing rows using the generated hash
         ON T.unique_row_id = S.unique_row_id
 
-        # Only insert rows that don't already exist
         WHEN NOT MATCHED THEN
           INSERT (
             unique_row_id,
