@@ -140,14 +140,14 @@ tasks:
 
       then:
 
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Create the final table
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Connect to the database and
       # create the final PostgreSQL table if it doesn't exist.
       #
       # This is where the processed taxi data will ultimately be stored.
-      - id: create_table
+      - id: yellow_create_table
         type: io.kestra.plugin.jdbc.postgresql.Query
 
         # Data documentation for Yellow Taxi Trip Records: 
@@ -176,14 +176,14 @@ tasks:
               congestion_surcharge   double precision
           );
         
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Create the staging table
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # The staging table is a temporary/intermediate location.
       #
       # In order to ensure idempotency, 
       # the data is first loaded here before being merged into the final table.
-      - id: create_staging_table
+      - id: yellow_create_staging_table
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
@@ -210,22 +210,22 @@ tasks:
               congestion_surcharge   double precision
           );
 
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Empty the staging table
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Potentially the staging table had existed before the prevous step and
       # consists of some data from a previous execution.
       # Remove that data before loading the new CSV.
-      - id: clear_staging_table
+      - id: yellow_clear_staging_table
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
           TRUNCATE TABLE {{render(vars.staging_table)}};
 
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Load the extracted data into the staging table
-      # -------------------------------------------------------------------------
-      - id: insert_data_into_staging_table
+      # -----------------------------------------------------------------------
+      - id: yellow_insert_data_into_staging_table
         type: io.kestra.plugin.jdbc.postgresql.CopyIn
         format: CSV
         from: "{{render(vars.data)}}"
@@ -238,14 +238,14 @@ tasks:
         congestion_surcharge]
         header: true # CSV contains a header row
 
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Update staging table with unique row id for each record
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       #
       # A set of identifying columns are are concatenated together and passed
       # through MD5 function that generates a hash that will identify the row.
       #
-      - id: add_unique_row_id
+      - id: yellow_add_unique_row_id
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
@@ -265,15 +265,15 @@ tasks:
             filename = '{{render(vars.filename)}}';
       
 
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Merge into the final table using the staging table
-      # -------------------------------------------------------------------------
+      # -----------------------------------------------------------------------
       # Compare rows in the staging table with rows already
       # present in the final table. Insert only the rows that do not already exist
       #
       # This prevents duplicate rows when the same data is loaded again.
       #
-      - id: insert_into_the_final_table
+      - id: yellow_insert_into_the_final_table
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
