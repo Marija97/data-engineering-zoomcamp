@@ -329,6 +329,188 @@ tasks:
               S.congestion_surcharge
             );
 
+      
+    # =========================================================================
+    # GREEN TAXI PIPELINE
+    # =========================================================================
+    # Execute this branch only when taxi = green
+    - id: if_green_taxi
+      type: io.kestra.plugin.core.flow.If
+
+      condition: "{{inputs.taxi == 'green'}}"
+
+      then:
+
+      # -----------------------------------------------------------------------
+      # Create the final table
+      # -----------------------------------------------------------------------
+      # Connect to the database and
+      # create the final PostgreSQL table if it doesn't exist.
+      #
+      # This is where the processed taxi data will ultimately be stored.
+      - id: yellow_create_table
+        type: io.kestra.plugin.jdbc.postgresql.Query
+
+        sql: |
+          CREATE TABLE IF NOT EXISTS {{render(vars.table)}} (
+              unique_row_id          text,
+              filename               text,
+              VendorID               text,
+              tpep_pickup_datetime   timestamp,
+              tpep_dropoff_datetime  timestamp,
+              passenger_count        integer,
+              trip_distance          double precision,
+              RatecodeID             text,
+              store_and_fwd_flag     text,
+              PULocationID           text,
+              DOLocationID           text,
+              payment_type           integer,
+              fare_amount            double precision,
+              extra                  double precision,
+              mta_tax                double precision,
+              tip_amount             double precision,
+              tolls_amount           double precision,
+              improvement_surcharge  double precision,
+              total_amount           double precision,
+              congestion_surcharge   double precision
+          );
+        
+      # -----------------------------------------------------------------------
+      # Create the staging table
+      # -----------------------------------------------------------------------
+      - id: yellow_create_staging_table
+        type: io.kestra.plugin.jdbc.postgresql.Queries
+
+        sql: |
+          CREATE TABLE IF NOT EXISTS {{render(vars.staging_table)}} (
+              unique_row_id          text,
+              filename               text,
+              VendorID               text,
+              tpep_pickup_datetime   timestamp,
+              tpep_dropoff_datetime  timestamp,
+              passenger_count        integer,
+              trip_distance          double precision,
+              RatecodeID             text,
+              store_and_fwd_flag     text,
+              PULocationID           text,
+              DOLocationID           text,
+              payment_type           integer,
+              fare_amount            double precision,
+              extra                  double precision,
+              mta_tax                double precision,
+              tip_amount             double precision,
+              tolls_amount           double precision,
+              improvement_surcharge  double precision,
+              total_amount           double precision,
+              congestion_surcharge   double precision
+          );
+
+      # -----------------------------------------------------------------------
+      # Empty the staging table
+      # -----------------------------------------------------------------------
+      - id: yellow_clear_staging_table
+        type: io.kestra.plugin.jdbc.postgresql.Queries
+
+        sql: |
+          TRUNCATE TABLE {{render(vars.staging_table)}};
+
+      # -----------------------------------------------------------------------
+      # Load the extracted data into the staging table
+      # -----------------------------------------------------------------------
+      - id: yellow_insert_data_into_staging_table
+        type: io.kestra.plugin.jdbc.postgresql.CopyIn
+        format: CSV
+        from: "{{render(vars.data)}}"
+        table: "{{render(vars.staging_table)}}"
+        # Explicitly define the order of columns in the CSV
+        columns: [VendorID, tpep_pickup_datetime, tpep_dropoff_datetime,
+        passenger_count, trip_distance,RatecodeID, store_and_fwd_flag, 
+        PULocationID, DOLocationID, payment_type, fare_amount, extra, 
+        mta_tax,tip_amount, tolls_amount, improvement_surcharge, total_amount, 
+        congestion_surcharge]
+        header: true # CSV contains a header row
+
+      # -----------------------------------------------------------------------
+      # Update staging table with unique row id for each record
+      # -----------------------------------------------------------------------
+      #
+      - id: yellow_add_unique_row_id
+        type: io.kestra.plugin.jdbc.postgresql.Queries
+
+        sql: |
+          UPDATE {{render(vars.staging_table)}}
+          SET
+
+            unique_row_id = md5(
+              COALESCE(CAST(VendorID AS text), '') ||
+              COALESCE(CAST(tpep_pickup_datetime AS text), '') ||
+              COALESCE(CAST(tpep_dropoff_datetime AS text), '') ||
+              COALESCE(PULocationID, '') ||
+              COALESCE(DOLocationID, '') ||
+              COALESCE(CAST(fare_amount AS text), '') ||
+              COALESCE(CAST(trip_distance AS text), '')
+            ),
+
+            filename = '{{render(vars.filename)}}';
+      
+      # -----------------------------------------------------------------------
+      # Merge into the final table using the staging table
+      # -----------------------------------------------------------------------
+      - id: yellow_insert_into_the_final_table
+        type: io.kestra.plugin.jdbc.postgresql.Queries
+
+        sql: |
+          MERGE INTO {{render(vars.table)}} AS T
+          USING {{render(vars.staging_table)}} AS S
+
+          ON T.unique_row_id = S.unique_row_id
+
+          WHEN NOT MATCHED THEN
+            INSERT (
+              unique_row_id,
+              filename,
+              VendorID,
+              tpep_pickup_datetime,
+              tpep_dropoff_datetime,
+              passenger_count,
+              trip_distance,
+              RatecodeID,
+              store_and_fwd_flag,
+              PULocationID,
+              DOLocationID,
+              payment_type,
+              fare_amount,
+              extra,
+              mta_tax,
+              tip_amount,
+              tolls_amount,
+              improvement_surcharge,
+              total_amount,
+              congestion_surcharge
+            )
+
+            VALUES (
+              S.unique_row_id,
+              S.filename,
+              S.VendorID,
+              S.tpep_pickup_datetime,
+              S.tpep_dropoff_datetime,
+              S.passenger_count,
+              S.trip_distance,
+              S.RatecodeID,
+              S.store_and_fwd_flag,
+              S.PULocationID,
+              S.DOLocationID,
+              S.payment_type,
+              S.fare_amount,
+              S.extra,
+              S.mta_tax,
+              S.tip_amount,
+              S.tolls_amount,
+              S.improvement_surcharge,
+              S.total_amount,
+              S.congestion_surcharge
+            );
 
 
     # =========================================================================
