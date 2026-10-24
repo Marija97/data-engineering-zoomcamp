@@ -334,6 +334,9 @@ tasks:
     # GREEN TAXI PIPELINE
     # =========================================================================
     # Execute this branch only when taxi = green
+    #
+    # The logic is the same as to the yellow branch, 
+    # except for the green taxi data having a different schema.
     - id: if_green_taxi
       type: io.kestra.plugin.core.flow.If
 
@@ -348,7 +351,7 @@ tasks:
       # create the final PostgreSQL table if it doesn't exist.
       #
       # This is where the processed taxi data will ultimately be stored.
-      - id: yellow_create_table
+      - id: green_create_table
         type: io.kestra.plugin.jdbc.postgresql.Query
 
         sql: |
@@ -356,29 +359,31 @@ tasks:
               unique_row_id          text,
               filename               text,
               VendorID               text,
-              tpep_pickup_datetime   timestamp,
-              tpep_dropoff_datetime  timestamp,
-              passenger_count        integer,
-              trip_distance          double precision,
-              RatecodeID             text,
+              lpep_pickup_datetime   timestamp,
+              lpep_dropoff_datetime  timestamp,
               store_and_fwd_flag     text,
+              RatecodeID             text,
               PULocationID           text,
               DOLocationID           text,
-              payment_type           integer,
+              passenger_count        integer,
+              trip_distance          double precision,
               fare_amount            double precision,
               extra                  double precision,
               mta_tax                double precision,
               tip_amount             double precision,
               tolls_amount           double precision,
+              ehail_fee              double precision,
               improvement_surcharge  double precision,
               total_amount           double precision,
+              payment_type           integer,
+              trip_type              integer,
               congestion_surcharge   double precision
           );
         
       # -----------------------------------------------------------------------
       # Create the staging table
       # -----------------------------------------------------------------------
-      - id: yellow_create_staging_table
+      - id: green_create_staging_table
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
@@ -386,29 +391,31 @@ tasks:
               unique_row_id          text,
               filename               text,
               VendorID               text,
-              tpep_pickup_datetime   timestamp,
-              tpep_dropoff_datetime  timestamp,
-              passenger_count        integer,
-              trip_distance          double precision,
-              RatecodeID             text,
+              lpep_pickup_datetime   timestamp,
+              lpep_dropoff_datetime  timestamp,
               store_and_fwd_flag     text,
+              RatecodeID             text,
               PULocationID           text,
               DOLocationID           text,
-              payment_type           integer,
+              passenger_count        integer,
+              trip_distance          double precision,
               fare_amount            double precision,
               extra                  double precision,
               mta_tax                double precision,
               tip_amount             double precision,
               tolls_amount           double precision,
+              ehail_fee              double precision,
               improvement_surcharge  double precision,
               total_amount           double precision,
+              payment_type           integer,
+              trip_type              integer,
               congestion_surcharge   double precision
           );
 
       # -----------------------------------------------------------------------
       # Empty the staging table
       # -----------------------------------------------------------------------
-      - id: yellow_clear_staging_table
+      - id: green_clear_staging_table
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
@@ -417,16 +424,16 @@ tasks:
       # -----------------------------------------------------------------------
       # Load the extracted data into the staging table
       # -----------------------------------------------------------------------
-      - id: yellow_insert_data_into_staging_table
+      - id: green_insert_data_into_staging_table
         type: io.kestra.plugin.jdbc.postgresql.CopyIn
         format: CSV
         from: "{{render(vars.data)}}"
         table: "{{render(vars.staging_table)}}"
         # Explicitly define the order of columns in the CSV
-        columns: [VendorID, tpep_pickup_datetime, tpep_dropoff_datetime,
-        passenger_count, trip_distance,RatecodeID, store_and_fwd_flag, 
-        PULocationID, DOLocationID, payment_type, fare_amount, extra, 
-        mta_tax,tip_amount, tolls_amount, improvement_surcharge, total_amount, 
+        columns: [VendorID, lpep_pickup_datetime, lpep_dropoff_datetime, store_and_fwd_flag, 
+        RatecodeID, PULocationID, DOLocationID, passenger_count, trip_distance, 
+        fare_amount, extra, mta_tax, tip_amount, tolls_amount, ehail_fee, 
+        improvement_surcharge, total_amount, payment_type, trip_type, 
         congestion_surcharge]
         header: true # CSV contains a header row
 
@@ -434,7 +441,7 @@ tasks:
       # Update staging table with unique row id for each record
       # -----------------------------------------------------------------------
       #
-      - id: yellow_add_unique_row_id
+      - id: green_add_unique_row_id
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
@@ -443,8 +450,8 @@ tasks:
 
             unique_row_id = md5(
               COALESCE(CAST(VendorID AS text), '') ||
-              COALESCE(CAST(tpep_pickup_datetime AS text), '') ||
-              COALESCE(CAST(tpep_dropoff_datetime AS text), '') ||
+              COALESCE(CAST(lpep_pickup_datetime AS text), '') ||
+              COALESCE(CAST(lpep_dropoff_datetime AS text), '') ||
               COALESCE(PULocationID, '') ||
               COALESCE(DOLocationID, '') ||
               COALESCE(CAST(fare_amount AS text), '') ||
@@ -452,11 +459,12 @@ tasks:
             ),
 
             filename = '{{render(vars.filename)}}';
+    
       
       # -----------------------------------------------------------------------
       # Merge into the final table using the staging table
       # -----------------------------------------------------------------------
-      - id: yellow_insert_into_the_final_table
+      - id: green_insert_into_the_final_table
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
@@ -470,22 +478,24 @@ tasks:
               unique_row_id,
               filename,
               VendorID,
-              tpep_pickup_datetime,
-              tpep_dropoff_datetime,
-              passenger_count,
-              trip_distance,
-              RatecodeID,
+              lpep_pickup_datetime,
+              lpep_dropoff_datetime,
               store_and_fwd_flag,
+              RatecodeID,
               PULocationID,
               DOLocationID,
-              payment_type,
+              passenger_count,
+              trip_distance,
               fare_amount,
               extra,
               mta_tax,
               tip_amount,
               tolls_amount,
+              ehail_fee,
               improvement_surcharge,
               total_amount,
+              payment_type,
+              trip_type,
               congestion_surcharge
             )
 
@@ -493,22 +503,24 @@ tasks:
               S.unique_row_id,
               S.filename,
               S.VendorID,
-              S.tpep_pickup_datetime,
-              S.tpep_dropoff_datetime,
-              S.passenger_count,
-              S.trip_distance,
-              S.RatecodeID,
+              S.lpep_pickup_datetime,
+              S.lpep_dropoff_datetime,
               S.store_and_fwd_flag,
+              S.RatecodeID,
               S.PULocationID,
               S.DOLocationID,
-              S.payment_type,
+              S.passenger_count,
+              S.trip_distance,
               S.fare_amount,
               S.extra,
               S.mta_tax,
               S.tip_amount,
               S.tolls_amount,
+              S.ehail_fee,
               S.improvement_surcharge,
               S.total_amount,
+              S.payment_type,
+              S.trip_type,
               S.congestion_surcharge
             );
 
