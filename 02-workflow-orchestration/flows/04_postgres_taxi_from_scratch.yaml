@@ -129,10 +129,11 @@ tasks:
         - wget -qO- {{render(vars.data_src_link)}} | gunzip | head -n 10 > {{render(vars.filename)}} 
           
 
-    # ==========================================================
+    # =========================================================================
     # YELLOW TAXI PIPELINE
-    # ==========================================================
-    # Only execute this branch for yellow taxi data
+    # =========================================================================
+    # Execute this branch only when taxi = yellow
+    #
     - id: if_yellow_taxi
       type: io.kestra.plugin.core.flow.If
 
@@ -264,7 +265,6 @@ tasks:
 
             filename = '{{render(vars.filename)}}';
       
-
       # -----------------------------------------------------------------------
       # Merge into the final table using the staging table
       # -----------------------------------------------------------------------
@@ -329,9 +329,11 @@ tasks:
               S.congestion_surcharge
             );
 
-    # -------------------------------------------------------------------------
+
+
+    # =========================================================================
     # Clean up execution files
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # Delete files created during this execution.
     #
     # If you'd like to explore Kestra outputs, disable this step.
