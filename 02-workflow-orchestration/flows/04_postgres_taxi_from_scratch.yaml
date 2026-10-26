@@ -90,6 +90,16 @@ pluginDefaults:
 # Tasks
 # =============================================================================
 tasks:
+    # -------------------------------------------------------------------------
+    # Set labels
+    # -------------------------------------------------------------------------
+    # Add metadata/labels to the Kestra execution to make
+    # executions easier to identify in the Kestra UI
+    - id: set_labels
+      type: io.kestra.plugin.core.execution.Labels
+      labels:
+        file: "{{render(vars.file)}}"
+        taxi: "{{inputs.taxi}}"
    
     # -------------------------------------------------------------------------
     # Prepare data URL
