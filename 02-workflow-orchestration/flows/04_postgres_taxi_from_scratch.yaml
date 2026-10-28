@@ -98,7 +98,7 @@ tasks:
     - id: set_labels
       type: io.kestra.plugin.core.execution.Labels
       labels:
-        file: "{{render(vars.file)}}"
+        file: "{{render(vars.filename)}}"
         taxi: "{{inputs.taxi}}"
    
     # -------------------------------------------------------------------------
