@@ -534,19 +534,19 @@ tasks:
               S.congestion_surcharge
             );
 
-      # -----------------------------------------------------------------------
-      # Remove the staging table
-      # -----------------------------------------------------------------------
-      - id: remove_staging_table
-        type: io.kestra.plugin.jdbc.postgresql.Queries
 
-        sql: |
-          DROP TABLE {{render(vars.staging_table)}};
+    # -------------------------------------------------------------------------
+    # Remove the staging table
+    # -------------------------------------------------------------------------
+    - id: remove_staging_table
+      type: io.kestra.plugin.jdbc.postgresql.Queries
 
+      sql: |
+        DROP TABLE IF EXISTS {{render(vars.staging_table)}};
 
-    # =========================================================================
+    # -------------------------------------------------------------------------
     # Clean up execution files
-    # =========================================================================
+    # -------------------------------------------------------------------------
     # Delete files created during this execution.
     #
     # If you'd like to explore Kestra outputs, disable this step.
