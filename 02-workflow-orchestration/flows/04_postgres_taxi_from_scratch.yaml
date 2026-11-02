@@ -366,7 +366,7 @@ tasks:
 
         sql: |
           CREATE TABLE IF NOT EXISTS {{render(vars.table)}} (
-              unique_row_id          text,
+              unique_row_id          text PRIMARY KEY,
               filename               text,
               VendorID               text,
               lpep_pickup_datetime   timestamp,
@@ -398,7 +398,7 @@ tasks:
 
         sql: |
           CREATE TABLE IF NOT EXISTS {{render(vars.staging_table)}} (
-              unique_row_id          text,
+              unique_row_id          text PRIMARY KEY,
               filename               text,
               VendorID               text,
               lpep_pickup_datetime   timestamp,
