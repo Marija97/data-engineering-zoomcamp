@@ -552,3 +552,10 @@ tasks:
     # If you'd like to explore Kestra outputs, disable this step.
     - id: purge_files
       type: io.kestra.plugin.core.storage.PurgeCurrentExecutionFiles
+
+
+# Runs share one staging table per taxi type, so allow only one execution
+# at a time. Extra runs wait in a queue until the current one finishes.
+concurrency:
+  limit: 1
+  behavior: QUEUE
