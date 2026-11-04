@@ -82,8 +82,8 @@ pluginDefaults:
   - type: io.kestra.plugin.jdbc.postgresql
     values:
       url: jdbc:postgresql://pgdatabase:5432/ny_taxi
-      username: root
-      password: root
+      username: "{{ secret('POSTGRES_USERNAME') }}"
+      password: "{{ secret('POSTGRES_PASSWORD') }}"
 
 
 # =============================================================================
