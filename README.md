@@ -1,4 +1,4 @@
-# 🚕 NYC Taxi Data Platform — Data Engineering Zoomcamp
+# Data Engineering Zoomcamp: NYC Taxi Data Platform
 
 I'm building an end-to-end data platform on **NYC Taxi trip data** as I work through the [DataTalks.Club Data Engineering Zoomcamp](https://github.com/DataTalksClub/data-engineering-zoomcamp) (2026 cohort).
 
