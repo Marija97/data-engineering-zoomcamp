@@ -136,7 +136,9 @@ tasks:
         # The shell commands to be executed
         # wget downloads the file compressed as .gz. and gunzip decompresses it
         # and the result gets written in the file with the name defined in variables
-        - wget -qO- {{render(vars.data_src_link)}} | gunzip > {{render(vars.filename)}} 
+      commands:
+        - wget -q {{render(vars.data_src_link)}} -O {{render(vars.filename)}}.gz
+        - gunzip -f {{render(vars.filename)}}.gz
           
 
     # =========================================================================
