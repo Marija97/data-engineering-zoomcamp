@@ -255,9 +255,8 @@ tasks:
       # Update staging table with unique row id for each record
       # -----------------------------------------------------------------------
       #
-      # A set of identifying columns are are concatenated together and passed
-      # through MD5 function that generates a hash that will identify the row.
-      #
+      # A set of columns is joined with ‘|’ separators and passed through 
+      # the MD5 function that generates a hash that will identify the row
       - id: yellow_add_unique_row_id
         type: io.kestra.plugin.jdbc.postgresql.Queries
 
@@ -265,15 +264,15 @@ tasks:
           UPDATE {{render(vars.staging_table)}}
           SET
 
-            unique_row_id = md5(
-              COALESCE(CAST(VendorID AS text), '') ||
-              COALESCE(CAST(tpep_pickup_datetime AS text), '') ||
-              COALESCE(CAST(tpep_dropoff_datetime AS text), '') ||
-              COALESCE(PULocationID, '') ||
-              COALESCE(DOLocationID, '') ||
-              COALESCE(CAST(fare_amount AS text), '') ||
-              COALESCE(CAST(trip_distance AS text), '')
-            ),
+            unique_row_id = md5(concat_ws('|',
+              VendorID,
+              tpep_pickup_datetime,
+              tpep_dropoff_datetime,
+              PULocationID,
+              DOLocationID,
+              fare_amount,
+              trip_distance
+            )),
 
             filename = '{{render(vars.filename)}}';
       
@@ -460,15 +459,15 @@ tasks:
           UPDATE {{render(vars.staging_table)}}
           SET
 
-            unique_row_id = md5(
-              COALESCE(CAST(VendorID AS text), '') ||
-              COALESCE(CAST(lpep_pickup_datetime AS text), '') ||
-              COALESCE(CAST(lpep_dropoff_datetime AS text), '') ||
-              COALESCE(PULocationID, '') ||
-              COALESCE(DOLocationID, '') ||
-              COALESCE(CAST(fare_amount AS text), '') ||
-              COALESCE(CAST(trip_distance AS text), '')
-            ),
+            unique_row_id = md5(concat_ws('|',
+              VendorID,
+              lpep_pickup_datetime,
+              lpep_dropoff_datetime,
+              PULocationID,
+              DOLocationID,
+              fare_amount,
+              trip_distance
+            )),
 
             filename = '{{render(vars.filename)}}';
     
