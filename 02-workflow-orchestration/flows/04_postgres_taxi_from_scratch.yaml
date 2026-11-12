@@ -289,7 +289,10 @@ tasks:
 
         sql: |
           MERGE INTO {{render(vars.table)}} AS T
-          USING {{render(vars.staging_table)}} AS S
+          USING (
+            SELECT DISTINCT ON (unique_row_id) *
+            FROM {{render(vars.staging_table)}}
+          ) AS S
 
           ON T.unique_row_id = S.unique_row_id
 
@@ -480,7 +483,10 @@ tasks:
 
         sql: |
           MERGE INTO {{render(vars.table)}} AS T
-          USING {{render(vars.staging_table)}} AS S
+          USING (
+            SELECT DISTINCT ON (unique_row_id) *
+            FROM {{render(vars.staging_table)}}
+          ) AS S
 
           ON T.unique_row_id = S.unique_row_id
 
