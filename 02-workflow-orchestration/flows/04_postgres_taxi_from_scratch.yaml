@@ -161,7 +161,7 @@ tasks:
       #
       # This is where the processed taxi data will ultimately be stored.
       - id: yellow_create_table
-        type: io.kestra.plugin.jdbc.postgresql.Query
+        type: io.kestra.plugin.jdbc.postgresql.Queries
 
         # Data documentation for Yellow Taxi Trip Records: 
         # https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf
@@ -226,7 +226,7 @@ tasks:
       # -----------------------------------------------------------------------
       # Empty the staging table
       # -----------------------------------------------------------------------
-      # Potentially the staging table had existed before the prevous step and
+      # Potentially the staging table had existed before the previous step and
       # consists of some data from a previous execution.
       # Remove that data before loading the new CSV.
       - id: yellow_clear_staging_table
@@ -366,7 +366,7 @@ tasks:
       #
       # This is where the processed taxi data will ultimately be stored.
       - id: green_create_table
-        type: io.kestra.plugin.jdbc.postgresql.Query
+        type: io.kestra.plugin.jdbc.postgresql.Queries
 
         sql: |
           CREATE TABLE IF NOT EXISTS {{render(vars.table)}} (
